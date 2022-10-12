@@ -1,0 +1,144 @@
+---
+title: "Analyzing the Age of Victims in Context of Demographics in Fatal Police Shootings
+  - Project 1 Report"
+author: "Berkeley Ho"
+date: "2022-09-18"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.height=7, fig.width=10, warning=FALSE, tidy=TRUE, tidy.opts=list(width.cutoff=60), echo= TRUE)
+library(ggplot2)
+library(rmarkdown)
+library(knitr)
+shootings <- read.csv('Project1_police_shootings.csv')
+shootings$Person.Age[shootings$Person.Age==0] = NA
+```
+
+# **I. Introduction**
+
+In this report, demographics pertaining to fatal police shootings between 2015 and 2019 are examined specifically within the context of the age of victims. Data was collected by the Washington Post from local news sources, social media, law enforcement websites, and fatal police shooting databases. More than 6000 observations record the age, gender, and race of victims. Variables specifically regarding the shooting are recorded also, including how the victim was fleeing, the threat level (determined by the threat to officers' life), and if the victim was armed. The relationships between the victim's gender, race, and if they were fleeing are analyzed with respect to the victim's age.
+
+![Officer Training](https://media.havengear.com/wp-content/uploads/2020/05/29170622/police-officer-pistol-training-900x600.jpeg)
+
+# **II. Distribution of Shooting Victims by Age**
+
+*For graphing and analysis purposes, victims whose ages are unknown/not recorded have been removed from the data set*
+
+The distribution of victims by age has a right skew to the older ages within the distribution, meaning that the median and quartiles would be the most optimal set of descriptive statistics to describe the distribution of age. The median age of shooting victims is `r median(shootings$Person.Age, na.rm=TRUE)` years. The first quartile is `r quantile(shootings$Person.Age, .25, na.rm=TRUE)` years, and the third quartile is `r quantile(shootings$Person.Age, .75, na.rm=TRUE)` years. 25% of shooting victims are younger than 27 years old, and 50% of all victims are between 27 and 45 years old.
+
+```{r echo=FALSE}
+#remove age rows with 0 where the age is not recorded
+shootings$Person.Age[shootings$Person.Age==0] = NA
+
+#histogram of age distribution
+ggplot(shootings) + geom_histogram(aes(x = Person.Age), binwidth = 1, na.rm=TRUE) + 
+  ylim(0, 250) + 
+  labs(title = 'Distribution of Ages in Police Shootings', y='Frequency', x='Age') + 
+  theme(text=element_text(size=17, face="bold"), plot.margin = unit(c(1.5, 1.5, 1.5, 1.5), "cm"))
+```
+
+# **III. Predictor Variable Graphs**
+
+## **A. Race**
+
+Within the graph and table, Native American and African American victims have the lowest median age of shooting victims of a specific racial group at `r median(shootings$Person.Age[shootings$Person.Race =="African American"], na.rm=TRUE)` years old. White victims have the highest median age, at `r median(shootings$Person.Age[shootings$Person.Race =="White"], na.rm=TRUE)` years old. With a difference of 7 years, if a victim is African American or Native American, they are more likely to be younger in age. Conversely, if the victim is white, they are more likely to be older. The other recorded racial groups included Hispanic and Asian peoples fall in between this range.
+
+```{r echo=FALSE}
+#median table by race
+race_ages_median <- aggregate(shootings[,2],by=list(shootings$Person.Race),FUN=median, na.rm=TRUE)
+#rename columns
+colnames(race_ages_median)[colnames(race_ages_median) == "Group.1"] <- "Race"
+colnames(race_ages_median)[colnames(race_ages_median) == "x"] <- "Age"
+
+#display table
+kable(race_ages_median, caption = "Table of Median Ages by Race")
+
+#multi-box plot by race
+ggplot(shootings, aes(x=Person.Race, y=Person.Age, fill=Person.Race)) + 
+  geom_boxplot( na.rm=TRUE) + 
+  labs(title = 'Age of Shooting Victims by Race', x = 'Race', y = 'Age') + 
+  scale_fill_brewer(palette="Dark2") + 
+  theme(title=element_text(size=17, face="bold"), axis.title=element_text(size=13, face="bold"), plot.margin = unit(c(1.5, 1, 1, 1.5), "cm")) +
+  guides(fill=guide_legend(title="Race")) +
+  scale_x_discrete(limits=c("Other", "Native American", "African American", "Hispanic", "Asian", "White", "Unknown"))
+```
+
+## **B. Gender**
+
+Within the table, of the victims who were male, the median age was `r median(shootings$Person.Age[shootings$Person.Gender =="Male"], na.rm=TRUE)` years old. 50% of male victims were between the ages of `r quantile(shootings$Person.Age[shootings$Person.Gender =="Male"], .25,na.rm=TRUE)` and `r quantile(shootings$Person.Age[shootings$Person.Gender =="Male"], .75,na.rm=TRUE)`, as seen in the table and graph. Victims who were female had similarly statistics, with a median age of `r median(shootings$Person.Age[shootings$Person.Gender =="Female"], na.rm=TRUE)` years old, and 50% of victims were between `r quantile(shootings$Person.Age[shootings$Person.Gender =="Female"], .25,na.rm=TRUE)` and `r quantile(shootings$Person.Age[shootings$Person.Gender =="Female"], .75,na.rm=TRUE)` years old. Victims of an unknown gender had a much different quartile range, but there were only 3 victims of an unknown gender who were observed in the study. As a result, differences in gender do not indicate much of a difference between the age of shooting victims. 
+
+```{r echo=FALSE}
+
+#quartiles by gender 
+gender_quartiles<-aggregate(shootings[,2],by=list(shootings$Person.Gender),FUN=quantile, na.rm=TRUE)
+
+#combine gender totals with quartiles
+gender_ages_quartiles = cbind(table(shootings$Person.Gender), gender_quartiles[,2,6])
+
+#rename columns
+colnames(gender_ages_quartiles) <- c("Frequency", "0%", "25%", "50%", "75%", "100%")
+
+#display table
+kable(gender_ages_quartiles, caption = "Table of Quartile Ages by Gender")
+
+#Grouped histogram
+ggplot(shootings, aes(x=Person.Gender, y=Person.Age, fill=Person.Gender)) + 
+  geom_boxplot(na.rm=TRUE) + 
+  labs(title = 'Age of Shooting Victims by Gender', x = 'Gender', y = 'Age') +
+  scale_fill_brewer(palette="Dark2") +
+  guides(fill=guide_legend(title="Gender")) +
+  theme(text=element_text(size=13, face="bold"), plot.margin = unit(c(1.0, 1.5, 1.0, 1.5), "cm"))
+
+
+```
+
+## **C. Fleeing Factor**
+
+Of the fleeing factors, the highest median age (`r median(shootings$Person.Age[shootings$Factors.Fleeing =="Not fleeing"],na.rm=TRUE)` years old) occurred when victims chose not to flee. Victims who fled on foot had the youngest median age at `r median(shootings$Person.Age[shootings$Factors.Fleeing =="Foot"],na.rm=TRUE)` years old, followed by the next largest cohort of victims who fled via car having a median age of `r median(shootings$Person.Age[shootings$Factors.Fleeing =="Car"],na.rm=TRUE)` Victims who chose to flee had
+lower ages when compared with victims who did not flee. 50% of victims who did not flee were between the age of `r quantile(shootings$Person.Age[shootings$Factors.Fleeing =="Not fleeing"], .25, na.rm=TRUE)` and `r quantile(shootings$Person.Age[shootings$Factors.Fleeing =="Not fleeing"], .75, na.rm=TRUE)`, compared to ages `r quantile(shootings$Person.Age[shootings$Factors.Fleeing =="Car"], .25, na.rm=TRUE)` and `r quantile(shootings$Person.Age[shootings$Factors.Fleeing =="Car"], .75, na.rm=TRUE)` for those who fled in cars, and `r quantile(shootings$Person.Age[shootings$Factors.Fleeing =="Foot"], .25, na.rm=TRUE)` and `r quantile(shootings$Person.Age[shootings$Factors.Fleeing =="Foot"], .75, na.rm=TRUE)` for those who fled on foot. 
+
+```{r echo=FALSE}
+
+#quartiles by fleeing factor
+fleeing_ages_quartiles<-aggregate(shootings[,2],by=list(shootings$Factors.Fleeing),FUN=quantile, na.rm=TRUE)
+
+#combine fleeing totals with quartiles
+fleeing.factor_ages_quartiles = cbind(table(shootings$Factors.Fleeing), fleeing_ages_quartiles[,2,6])
+
+#rename columns and rows
+colnames(fleeing.factor_ages_quartiles) <- c("Frequency", "0%", "25%", "50%", "75%", "100%")
+rownames(fleeing.factor_ages_quartiles) <- c("Car", "Foot", "Not Fleeing", "Other", "Unknown")
+
+#display table
+kable(fleeing.factor_ages_quartiles, caption = "Table of Quartile Ages by Fleeing Factor")
+
+#Grouped histogram
+ggplot(shootings, aes(x=Factors.Fleeing, y=Person.Age, fill=Factors.Fleeing)) + 
+  geom_boxplot(na.rm=TRUE) + 
+  labs(title = 'Age of Shooting Victims by Fleeing Factor', x = 'Fleeing Factor', y = 'Age') +
+  guides(fill=guide_legend(title="Method of Fleeing")) +
+  scale_x_discrete(limits=c("Foot", "Other", "Car", "unknown", "Not fleeing"), labels=c("unknown" = "Unknown", "Not fleeing" = "Not Fleeing")) +
+  theme(text=element_text(size=10, face="bold"), plot.margin = unit(c(1.0, 1.0, 1.0, 1.0), "cm"))  + scale_fill_discrete(name="Method of Fleeing", labels = c("Foot", "Other", "Car", "Unknown", "Not Fleeing"))
+
+```
+
+# **IV. Conclusion**
+
+  In the data set, the variables of race, gender, and fleeing factor of police shooting victims were graphed in relationship to the victim's age. Because the distribution of ages had a right skew, medians and quartiles were used to assess the middle points of the data sample. 
+  Of all shooting victims, the median age was 35 years old. However, when categorized by different subsets, the median age of shooting victims varied by as much as 5 years. When victims were subset by race, the white victims had the highest median age of any identifiable race.  At 38 years old, it is 7 years greater than the median age of 31 years for African American and Native American victims. 
+  In contrast, the gender of victims did not indicate a median age different than that of the whole sample, as the median age for female and male victims were 36 and 35 years old, respectively. 
+  For the fleeing factor variable, the three main observations of how a victim fled included by car, foot, or not at all. Victims who did not flee had the highest median age of 37 years, compared to that of by foot and car at 31 and 33 years respectively. If the victim fled, it was more probable that their age was around the median age of 31 to 33, whereas not fleeing indicated a higher age more often.
+
+  Areas for future research could include investigating if there is a significant difference in ages when separated by both gender and race. Additionally, collecting more observations to increase the sample size and information available would improve the ability to determine a confidence interval for comparing if differences in data are significant. 
+
+
+### **Citations**
+[*Police Shootings CSV: https://think.cs.vt.edu/corgis/csv/police_shootings/ *](https://think.cs.vt.edu/corgis/csv/police_shootings/)
+
+[*Image: https://havengear.com/blog/accessories-for-riot-gear/*](https://havengear.com/blog/accessories-for-riot-gear/){.uri}
