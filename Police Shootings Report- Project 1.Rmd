@@ -144,3 +144,5 @@ ggplot(shootings, aes(x=Factors.Fleeing, y=Person.Age, fill=Factors.Fleeing)) +
 [*Image: https://havengear.com/blog/accessories-for-riot-gear/*](https://havengear.com/blog/accessories-for-riot-gear/){.uri}
 
 This file was edited using github
+
+Further collaborative editing
