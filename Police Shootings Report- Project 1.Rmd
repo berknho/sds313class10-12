@@ -142,3 +142,5 @@ ggplot(shootings, aes(x=Factors.Fleeing, y=Person.Age, fill=Factors.Fleeing)) +
 [*Police Shootings CSV: https://think.cs.vt.edu/corgis/csv/police_shootings/ *](https://think.cs.vt.edu/corgis/csv/police_shootings/)
 
 [*Image: https://havengear.com/blog/accessories-for-riot-gear/*](https://havengear.com/blog/accessories-for-riot-gear/){.uri}
+
+This file was edited using github
